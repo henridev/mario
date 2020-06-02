@@ -12,6 +12,7 @@ BRED = 108 / 255
 BGREEN = 140 / 255
 BBLUE = 255 / 255
 
+PLAYER_STARTING_TILE = 10
 GAME_STATES = {setup = "setup", start = "start", play = "play" , pause = "pause", serve = "serve", gameOver = "gameOver"}
 --endregion
 

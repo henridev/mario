@@ -2,7 +2,7 @@ Player = Class{}
 
 local MOVE_SPEED = 80
 local JUMP_VELOCITY = 400 
-local PLAYER_STATES = {IDLE="IDLE", RUNNING="RUNNING", JUMPING="JUMPING"}
+local PLAYER_STATES = {IDLE="IDLE", RUNNING="RUNNING", JUMPING="JUMPING", VICTORY="VICTORY"}
 
 require 'classes/animation'
 
@@ -12,7 +12,7 @@ function Player:init(map)
 
     self.playerWidth = 16
     self.playerHeight = 20
-    self.x = map.tilewidth * 10
+    self.x = map.tilewidth * PLAYER_STARTING_TILE
     self.y = map.tileheight * (map.mapheight / 2 - 1) - self.playerHeight
 
 
@@ -54,6 +54,9 @@ function Player:init(map)
             self:checkMapCollideJump()
             self:checkLeftCollide()
             self:checkRightCollide()
+        end,
+        VICTORY = function()
+            self:checkGroundTouch()
         end
     }
 
@@ -61,7 +64,8 @@ function Player:init(map)
     self.animationFrames= {
                             IDLE = {self.frames[1]}, 
                             RUNNING = {self.frames[9], self.frames[10], self.frames[11]},
-                            JUMPING = {self.frames[3]}
+                            JUMPING = {self.frames[3]},
+                            VICTORY = {self.frames[6]}
                         }
    
     self.animations = {
@@ -78,6 +82,11 @@ function Player:init(map)
         ['JUMPING'] = Animation({
                             texture = self.playerTextures, 
                             frames = self.animationFrames.JUMPING, 
+                            interval = 1
+                        }),
+        ['VICTORY'] = Animation({
+                            texture = self.playerTextures, 
+                            frames = self.animationFrames.VICTORY, 
                             interval = 1
                         }),
     }
@@ -125,6 +134,7 @@ function Player:jumpMovement()
         self.dx = MOVE_SPEED
     end
 end
+
 --endregion
 
 function Player:update(dt)
@@ -146,7 +156,7 @@ function Player:render()
     else
          scaleX = -1
     end
-    
+ 
     love.graphics.draw(
                         self.playerTextures, self.currentFrame, 
                         math.floor(self.x + self.playerWidth / 2), 
@@ -157,6 +167,10 @@ function Player:render()
                         self.xOffset, 
                         self.yOffset
                     )
+    
+    if self.currentState == PLAYER_STATES.VICTORY then 
+        love.graphics.printf("VICTORY !!", 0, self.y - 100, self.x + 200, 'center')
+    end
 end
 
 --region COLLISSION CHECKERS
@@ -206,12 +220,28 @@ function Player:checkMapCollideJump()
     bottomLeftXIndex = self.x
     bottomRightXIndex = self.x + self.playerWidth - 1
     bottomYIndex = self.y + self.playerHeight
-    if  self.map:collides(self.map:getTileAt(bottomLeftXIndex, bottomYIndex)) or 
+    if  self.map:collidesFlag(self.map:getTileAt(bottomLeftXIndex, bottomYIndex)) or 
+        self.map:collidesFlag(self.map:getTileAt(bottomRightXIndex, bottomYIndex))  then 
+        self.dx = 0
+        self.dy = JUMP_VELOCITY
+        self.currentState = PLAYER_STATES.VICTORY
+        self.animation = self.animations[self.currentState]
+    elseif  self.map:collides(self.map:getTileAt(bottomLeftXIndex, bottomYIndex)) or 
         self.map:collides(self.map:getTileAt(bottomRightXIndex, bottomYIndex)) then 
-
         self.dy = 0
         self.currentState = PLAYER_STATES.IDLE
         self.animation = self.animations[self.currentState]
+        self.y = (self.map:getTileAt(bottomLeftXIndex, bottomYIndex).y - 1) * self.map.tileheight - self.playerHeight
+    end
+end
+
+function Player:checkGroundTouch()
+    bottomLeftXIndex = self.x
+    bottomRightXIndex = self.x + self.playerWidth - 1
+    bottomYIndex = self.y + self.playerHeight
+    if  self.map:collides(self.map:getTileAt(bottomLeftXIndex, bottomYIndex)) or 
+        self.map:collides(self.map:getTileAt(bottomRightXIndex, bottomYIndex)) then 
+        self.dy = 0
         self.y = (self.map:getTileAt(bottomLeftXIndex, bottomYIndex).y - 1) * self.map.tileheight - self.playerHeight
     end
 end
