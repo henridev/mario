@@ -15,7 +15,7 @@ end
 
 function Animation:restart()
     self.timer = 0
-    self.animationState = 0
+    self.animationState = 1
 end
 
 function Animation:update(dt)

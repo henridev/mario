@@ -18,21 +18,23 @@ JUMP_BLOCK = 5
 JUMP_BLOCK_HIT = 9
 --endregion
 
-local SCROLL_SPEED = 62
+
 
 function Map:init()
     
-
+    self.gravity = 15
     self.tilewidth = 16
     self.tileheight = 16
     self.mapwidth = 30 -- 16 * 30 = 480 (virtual is 432)
     self.mapheight = 28 -- 484 (virtual is 243)
-    self.tiles = {}
+    
     self.camX = 0
     self.camY = 0
+    
 
     -- returns img object that can be drawn to screen 
     self.spritesheet = love.graphics.newImage('assets/graphics/spritesheet.png')
+    self.tiles = {}
     self.tileSprites = generateQuads(self.spritesheet, self.tilewidth, self.tileheight)
 
     self.mapWidthPixels = self.mapwidth * self.tilewidth
@@ -120,9 +122,13 @@ function Map:getTile(x, y)
     return self.tiles[index] 
 end
 
-function Map:getTileType(x, y)
+function Map:getTileAt(x, y)
     -- +1 because everything is one indexed 
-    return self:getTile(math.floor( x / self.tilewidth ) + 1, math.floor( y / self.tileheight ) + 1)
+    return {
+        x = math.floor(x / self.tilewidth) + 1,
+        y = math.floor(y / self.tileheight) + 1,
+        id = self:getTile(math.floor(x / self.tilewidth) + 1, math.floor(y / self.tileheight) + 1)
+    }
 end 
 --endregion
 
@@ -159,3 +165,18 @@ function Map:renderBlock(x)
     self:setTile(x, self.mapheight / 2 - 4, JUMP_BLOCK)
 end
 --endregion
+
+function Map:collides(tile) 
+    local collidableObjects = {
+        TILE_BRICK, JUMP_BLOCK, JUMP_BLOCK_HIT,
+        MUSHROOM_TOP, MUSHROOM_BOTTOM
+    }
+
+    for _, v in ipairs(collidableObjects) do
+        if tile.id == v then 
+            return true
+        end
+    end
+
+    return false
+end
