@@ -22,11 +22,15 @@ JUMP_BLOCK_HIT = 9
 
 function Map:init()
     
+    --region DIMENSIONS
     self.gravity = 15
     self.tilewidth = 16
     self.tileheight = 16
     self.mapwidth = 30 -- 16 * 30 = 480 (virtual is 432)
     self.mapheight = 28 -- 484 (virtual is 243)
+    self.mapWidthPixels = self.mapwidth * self.tilewidth
+    self.mapHeightPixels = self.mapheight * self.tileheight
+    --endregion
     
     self.camX = 0
     self.camY = 0
@@ -37,10 +41,8 @@ function Map:init()
     self.tiles = {}
     self.tileSprites = generateQuads(self.spritesheet, self.tilewidth, self.tileheight)
 
-    self.mapWidthPixels = self.mapwidth * self.tilewidth
-    self.mapHeightPixels = self.mapheight * self.tileheight
-
     self.player = Player(self)
+    self.music = love.audio.newSource('assets/audio/music.wav', 'static')
 
     -- generate empty fields for entire map 
     for y = 1, self.mapheight do -- row by row
@@ -80,8 +82,9 @@ function Map:init()
         end        
     end
 
-
-
+    self.music:setLooping(true)
+    self.music:setVolume(0.25)
+    self.music:play()
 end
 
 function Map:update(dt)

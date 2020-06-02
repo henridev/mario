@@ -45,7 +45,6 @@ end
 
 function love.update(dt)
     map:update(dt)
-
     love.keyboard.keysPressed = {}
 end
 

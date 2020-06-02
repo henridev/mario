@@ -12,9 +12,10 @@ function Player:init(map)
 
     self.playerWidth = 16
     self.playerHeight = 20
-
     self.x = map.tilewidth * 10
     self.y = map.tileheight * (map.mapheight / 2 - 1) - self.playerHeight
+
+
     -- offset from top left to center to support sprite flipping
     self.xOffset = 8
     self.yOffset = 10
@@ -25,6 +26,11 @@ function Player:init(map)
     self.currentState = PLAYER_STATES.IDLE 
     self.direction = "right"
 
+    self.sounds = {
+        jump = love.audio.newSource('assets/audio/jump.wav', 'static'),
+        hit = love.audio.newSource('assets/audio/hit.wav', 'static'),
+        coin = love.audio.newSource('assets/audio/coin.wav', 'static'),
+    }
     self.playerTextures = love.graphics.newImage('assets/graphics/blue_alien.png')
     self.frames = generateQuads(self.playerTextures, self.playerWidth, self.playerHeight)
     self.currentFrame = nil
@@ -87,6 +93,7 @@ function Player:runOrIdleMovement(isRunning)
         self.dy = -JUMP_VELOCITY
         self.currentState = PLAYER_STATES.JUMPING
         self.animation = self.animations.JUMPING
+        self.sounds.jump:play()
     elseif love.keyboard.isDown('q')  then
         self.direction = "left"
         self.dx =  -MOVE_SPEED
@@ -223,13 +230,26 @@ function Player:calculateJump()
         if  self.map:getTileAt(topLeftXIndex,self.y).id ~= TILE_EMTPY or
             self.map:getTileAt(topRightXIndex, self.y).id ~= TILE_EMTPY    
         then
+            local playCoin = false
+            local playHit = false
             self.dy = 0
-
             if self.map:getTileAt(topLeftXIndex, self.y).id == JUMP_BLOCK then
                 self.map:changeBlock(topLeftXIndex, self.y)
+                playCoin = true
+            else 
+                playHit = true
             end
             if self.map:getTileAt(topRightXIndex , self.y).id == JUMP_BLOCK then
                 self.map:changeBlock(topRightXIndex , self.y)
+                playCoin = true
+            else 
+                playHit = true
+            end
+
+            if playCoin then
+                self.sounds.coin:play()
+            elseif playHit then 
+                self.sounds.hit:play()
             end
         end
     end
